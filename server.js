@@ -1,11 +1,12 @@
+require("dotenv").config();
 let express = require("express");
 let logger = require("morgan");
 let mongoose = require("mongoose");
 let axios = require("axios");
 let cheerio = require("cheerio");
 
-
 let db = require("./models");
+console.log(db.Article);
 
 let PORT = process.env.PORT || 3000;
 
@@ -22,38 +23,32 @@ app.use(express.json());
 // Make public a static folder
 app.use(express.static("public"));
 
-// Connect to the Mongo DB
-mongoose.connect(`mongodb+srv://${process.env.mongoUser}:${process.env.mongoPassword}@${process.env.mongoUser}-w02nq.mongodb.net/${process.env.mongoDb}?retryWrites=true&w=majority`, { useNewUrlParser: true });
+let mongoUrl =`mongodb+srv://${process.env.mongoUser}:${process.env.mongoPassword}@${process.env.mongoUser}-w02nq.mongodb.net/${process.env.mongoDb}?retryWrites=true&w=majority`;
 
+mongoose.connect(mongoUrl, { useNewUrlParser: true });
 // Routes
 
-// A GET route for scraping the echoJS website
+
 axios.get("https://www.nyt.com").then(function (response) {
 
-    // Load the Response into cheerio and save it to a variable
-    // '$' becomes a shorthand for cheerio's selector commands, much like jQuery's '$'
     var $ = cheerio.load(response.data);
 
-
-    // An empty array to save the data that we'll scrape
-    var results = [];
-
-    // With cheerio, find each p-tag with the "title" class
-    // (i: iterator. element: the current element)
     $("article").each(function (i, element) {
+        var result = {};
 
-        // Save the text of the element in a "title" variable
-        var title = $(element).text();
+        result.title = $(element).text();
+        result.link = "https//nytimes.com/" + $(this).find("a").attr("href");
+        // var title = $(element).text();
+        // var link = "https//nytimes.com/" + $(this).find("a").attr("href");
 
-        // In the currently selected element, look at its child elements (i.e., its a-tags),
-        // then save the values for any "href" attributes that the child elements may have
-        var link = "https//nytimes.com/" + $(this).find("a").attr("href");
+        db.Article.create(result).then(function (dbArticle) {
+            console.log(dbArticle);
+        })
+            .catch(function (err) {
+                console.log(err)
 
-        // Save these results in an object that we'll push into the results array we defined earlier
-        results.push({
-            title: title,
-            link: link
-        });
+            });
+
     });
 
     // Log the results once you've looped through each of the elements found with cheerio
