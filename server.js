@@ -23,7 +23,7 @@ app.use(express.json());
 // Make public a static folder
 app.use(express.static("public"));
 
-let mongoUrl =`mongodb+srv://${process.env.mongoUser}:${process.env.mongoPassword}@${process.env.mongoUser}-w02nq.mongodb.net/${process.env.mongoDb}?retryWrites=true&w=majority`;
+let mongoUrl = `mongodb+srv://${process.env.mongoUser}:${process.env.mongoPassword}@${process.env.mongoUser}-w02nq.mongodb.net/${process.env.mongoDb}?retryWrites=true&w=majority`;
 
 mongoose.connect(mongoUrl, { useNewUrlParser: true });
 // Routes
@@ -48,7 +48,12 @@ axios.get("https://www.nyt.com").then(function (response) {
                 console.log(err)
 
             });
-
+        
+        $('.storiesDiv').append(
+            $('<tr>'),
+            $('<td>').text(result.title),
+            $('<td').text(result.link)
+        )
     });
 
     // Log the results once you've looped through each of the elements found with cheerio
