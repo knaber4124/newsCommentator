@@ -28,41 +28,44 @@ let mongoUrl = `mongodb+srv://${process.env.mongoUser}:${process.env.mongoPasswo
 mongoose.connect(mongoUrl, { useNewUrlParser: true });
 // Routes
 
+let getStories = function () {
+    axios.get("https://www.nyt.com").then(function (response) {
 
-axios.get("https://www.nyt.com").then(function (response) {
+        var $ = cheerio.load(response.data);
 
-    var $ = cheerio.load(response.data);
+        $("article").each(function (i, element) {
+            var result = {};
 
-    $("article").each(function (i, element) {
-        var result = {};
+            result.title = $(element).text();
+            result.link = "https//nytimes.com/" + $(this).find("a").attr("href");
+            // var title = $(element).text();
+            // var link = "https//nytimes.com/" + $(this).find("a").attr("href");
 
-        result.title = $(element).text();
-        result.link = "https//nytimes.com/" + $(this).find("a").attr("href");
-        // var title = $(element).text();
-        // var link = "https//nytimes.com/" + $(this).find("a").attr("href");
+            db.Article.create(result).then(function (dbArticle) {
+                console.log(dbArticle);
+            })
+                .catch(function (err) {
+                    console.log(err)
 
-        db.Article.create(result).then(function (dbArticle) {
-            console.log(dbArticle);
-        })
-            .catch(function (err) {
-                console.log(err)
+                });
 
-            });
-        
-        $('.storiesDiv').append(
-            $('<tr>'),
-            $('<td>').text(result.title),
-            $('<td').text(result.link)
-        )
-    });
+            $('.storiesDiv').append(
+                $('<tr>'),
+                $('<td>').text(result.title),
+                $('<td').text(result.link)
+            )
+        });
 
-    // Log the results once you've looped through each of the elements found with cheerio
-    console.log(results);
-})
-    .catch(function (err) {
-        console.log(err);
-    });
+        // Log the results once you've looped through each of the elements found with cheerio
+        console.log(results);
+    })
+        .catch(function (err) {
+            console.log(err);
+        });
+}
 // Start the server
 app.listen(PORT, function () {
     console.log("App running on port " + PORT + "!");
 });
+
+module.exports = getStories;
